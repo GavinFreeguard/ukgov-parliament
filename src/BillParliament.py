@@ -24,11 +24,14 @@ import unicodedata
 
 twfy = TWFY.TWFY('G8rDJLCXMjVNE2rc9cE9kx4J')
 
-# session parameters
 
+# SESSION PARAMETERS
 current_session = "2013-14"
-session_years = ["2013-14","2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
-# session_years = ["2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
+# use first command-line argument as search term, if available
+if len(sys.argv) > 1:
+    session_years = sys.argv[1]
+else:
+    session_years = ["2013-14","2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
 
 # note: TWFY won't return the right MP through getMP if that MP is not in office at present, but will return all MPs through getMPs and/or getPerson at a certain time 
 # in the past, from which you can then pick up the desired MP. Then you need to take care to get the right constituency from getMP given the point in time, and take the guardian 
@@ -463,9 +466,9 @@ for session_year in session_years:
                     print(acturl)
                     urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
                 if e.code == 300:
-                    print(urlLGUK)
+                    print(acturl)
                     newurl = raw_input('Multiple choices available - insert final URL to use.')
-                    urlLGUK = urllib2.urlopen(newurl + '/data.xml')
+                    urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
 
             # use this final URl to get XML data for that piece of legislation
             try:
