@@ -3,14 +3,7 @@
   <component name="ProjectDictionaryState">
     <dictionary name="petrbouchal" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.2.2 (/Library/Frameworks/Python.framework/Versions/3.2/bin/python3)" project-jdk-type="Python SDK" />
-  <component name="PyConsoleOptionsProvider">
-    <option name="myPythonConsoleState">
-      <console-settings sdk-home="/Library/Frameworks/Python.framework/Versions/2.7/bin/python">
-        <option name="mySdkHome" value="/Library/Frameworks/Python.framework/Versions/2.7/bin/python" />
-      </console-settings>
-    </option>
-  </component>
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.3rc2 (/Library/Frameworks/Python.framework/Versions/2.7/bin/python)" project-jdk-type="Python SDK" />
   <component name="masterDetails">
     <states>
       <state key="ScopeChooserConfigurable.UI">
