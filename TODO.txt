@@ -1,0 +1,19 @@
+TODO
+- 1. see comment within scraper code
+- 2. design uid for bills and stages
+- DONE mark stages by their position within the set of stages for bill - so 1 out of 12, "last", etc.
+- for *stages* and *bills*, create dummy for
+	- DONE royal assent
+	- lapsed bills
+- DONE create a UKPGA dummy for both *bills* and *stages* - is 1 for PMBs and G bills that have Royal Assent
+- DONE create variable for both bills and stages for Royal Assent
+- create variable for Year of Royal Assent
+- correct error in dates - must clear laststagedate and firststagedate at beginning of stage loop
+- create event categories: Lords committee, Commons committee, Commons Report, Lords Report
+	- ideally, do event counts and durations within these, or else it can be done in Excel
+
+- for things that ger rotyal assent, try to generate the link to legislation.gov.uk
+
+- think about creating a separate table with votes on divisions
+
+- when sponsor is MP, name his Sponsor1inst = "MP"

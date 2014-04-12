@@ -1,0 +1,93 @@
+'''
+Created on May 7, 2012
+
+@author: petrbouchal
+'''
+
+import time
+import urllib2
+import pprint
+
+from twfy import TWFY
+twfy = TWFY.TWFY('G8rDJLCXMjVNE2rc9cE9kx4J')
+
+import json
+import csv
+import datetime
+now = datetime.datetime.now()
+
+# prepare file for writing
+
+session_year = ''
+date = now.strftime("%Y%m%d")
+
+sponsorsoutfile = "../output/BillSponsors_" + session_year + '_' + date + '.csv'
+csvout3 = sponsorsoutfile
+    
+sponsorslist = open(csvout3, 'wb')
+writer3 = csv.writer(sponsorslist)
+headerrow3 = []
+writer3.writerow(headerrow3)
+
+#getmp = 'http://findyourmp.parliament.uk/api/search?q=' + sponsor1 + '&format=csv'
+allmps = json.loads(twfy.api.getMPs(output='js',search=''), 'iso-8859-1')
+for mpr in allmps:
+    mpid_twfy = mpr['person_id']
+    print mpid_twfy
+    getmp2 = json.loads(twfy.api.getMP(output='js',id=mpid_twfy), 'iso-8859-1')
+    mpparty = getmp2[0]['party']
+    mpentered = getmp2[0]['entered_house']
+    mpenteredhow = getmp2[0]['entered_reason']
+    mpconstituency = getmp2[0]['constituency']
+    print mpparty
+    print mpconstituency
+    print mpentered
+    constnameesc = mpconstituency.replace(' ','+')
+    twfyconstiturl = 'http://www.theyworkforyou.com/api/getConstituency?name='+constnameesc+'&output=js&key=' + 'G8rDJLCXMjVNE2rc9cE9kx4J'        
+    try:
+        twfycon = urllib2.urlopen(twfyconstiturl)
+    except IOError:
+        print 'URL opening failed, trying again after 5 secs...'
+        time.sleep(5)
+        try:
+            twfycon = urllib2.urlopen(twfyconstiturl)
+        except IOError:
+            raw_input('Connection failed, press enter after you fix it.')
+    getconstit = json.load(twfycon, 'iso-8859-1')
+    print "GETCONSTIT"
+    pprint.pprint(getconstit)
+    constit_grdn_id = getconstit['guardian_id']
+    grdn_url = 'http://www.guardian.co.uk/politics/api/constituency/' + constit_grdn_id +'/json'
+    try:
+        response = urllib2.urlopen(grdn_url)
+    except IOError:
+        print 'URL opening failed, trying again after 5 secs...'
+        time.sleep(5)
+        try:
+            response = urllib2.urlopen(grdn_url)
+        except IOError:
+            raw_input('Connection failed, press enter after you fix it.')
+    grdn_const = json.load(response)
+    pprint.pprint(grdn_const)
+    winmajor = grdn_const['constituency']['contests'][1]['winning-majority-as-votes']
+    grdn_mp_url = grdn_const['constituency']['mp']['json-url']
+    print grdn_mp_url
+    try:
+        grdn_mp0 = urllib2.urlopen(grdn_mp_url)
+    except IOError:
+        print 'URL opening failed, trying again after 5 secs...'
+        time.sleep(5)
+        try:
+            grdn_mp0 = urllib2.urlopen(grdn_url)
+        except IOError:
+            raw_input('Connection failed, press enter after you fix it.')
+    grdn_mp = json.load(grdn_mp0, 'iso-8859-1')
+    pprint.pprint(grdn_mp)
+    percvote = grdn_mp['person']['candidacies'][1]['votes-as-percentage']
+    mpid_grdn = grdn_const['constituency']['mp']['aristotle-id']
+    print 'Guardian ID: '+ mpid_grdn
+    print '% of vote 2010: ' + percvote
+    
+    row3 = [mpid_twfy, mpid_grdn]
+    writer3.writerow(row3)
+        
