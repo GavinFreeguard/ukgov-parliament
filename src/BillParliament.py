@@ -451,6 +451,7 @@ for session_year in session_years:
             print(acturl)
 
             # CATCH EXCEPTIONS AND ALLOW INPUT TO RETRY WITH BETTER PARAMETERS
+            # find the final URL returned by legislation.gov.uk in response to search query
             try:
                 urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
             except urllib2.HTTPError, e:
@@ -464,8 +465,9 @@ for session_year in session_years:
                 if e.code == 300:
                     print(urlLGUK)
                     newurl = raw_input('Multiple choices available - insert final URL to use.')
-                    urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
+                    urlLGUK = urllib2.urlopen(newurl + '/data.xml')
 
+            # use this final URl to get XML data for that piece of legislation
             try:
                 response = urllib2.urlopen(urlLGUK)
             except urllib2.HTTPError:
@@ -475,8 +477,10 @@ for session_year in session_years:
                 except urllib2.HTTPError:
                     raw_input('Connection failed. Press enter once you\'ve fixed it')
                     response = urllib2.urlopen(urlLGUK)
+            # parse
             xmlLGUK = response.read()
             xmlsoup = BeautifulSoup(xmlLGUK,'xml')
+            # get stats from inside XML
             numParas = xmlsoup.Metadata.Statistics.TotalParagraphs['Value']
             numBodyParas = xmlsoup.Metadata.Statistics.BodyParagraphs['Value']
             numScheduleParas = xmlsoup.Metadata.Statistics.ScheduleParagraphs['Value']
