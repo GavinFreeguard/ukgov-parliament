@@ -462,7 +462,7 @@ for session_year in session_years:
                     print(acturl)
                     urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
                 if e.code == 300:
-                    print(urlLGUK.geturl())
+                    print(urlLGUK)
                     newurl = raw_input('Multiple choices available - insert final URL to use.')
                     urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
 
