@@ -88,12 +88,12 @@ for session_year in session_years:
     # LOAD BILLS LIST
     try:
         response = urllib2.urlopen(urldat)
-    except IOError:
+    except urllib2.HTTPError:
         print('URL opening failed, trying again after 5 secs...')
         time.sleep(5)
         try:
             response = urllib2.urlopen(urldat)
-        except IOError:
+        except urllib2.HTTPError:
             raw_input('Connection failed, press enter after you fix it.')
 
     html0 = response.read()
@@ -119,12 +119,12 @@ for session_year in session_years:
 
         try:
             response = urllib2.urlopen(billurl)
-        except IOError:
+        except urllib2.HTTPError:
             print('URL opening failed, trying again after 5 secs...')
             time.sleep(5)
             try:
                 response = urllib2.urlopen(billurl)
-            except IOError:
+            except urllib2.HTTPError:
                 raw_input('Connection failed, press enter after you fix it.')
 
         # LOAD BILL PAGE              
@@ -329,12 +329,12 @@ for session_year in session_years:
                 twfyconstiturl = 'http://www.theyworkforyou.com/api/getConstituency?name='+constnameesc+'&output=js&key=' + 'G8rDJLCXMjVNE2rc9cE9kx4J'
                 try:
                     twfycon = urllib2.urlopen(twfyconstiturl)
-                except IOError:
+                except urllib2.HTTPError:
                     print('URL opening failed, trying again after 5 secs...')
                     time.sleep(5)
                     try:
                         twfycon = urllib2.urlopen(twfyconstiturl)
-                    except IOError:
+                    except urllib2.HTTPError:
                         raw_input('Connection failed, press enter after you fix it.')
 
                 getconstit = json.load(twfycon, 'iso-8859-1')
@@ -342,12 +342,12 @@ for session_year in session_years:
                 grdn_url = 'http://www.guardian.co.uk/politics/api/constituency/' + constid_grdn +'/json'
                 try:
                     response = urllib2.urlopen(grdn_url)
-                except IOError:
+                except urllib2.HTTPError:
                     print('URL opening failed, trying again after 5 secs...')
                     time.sleep(5)
                     try:
                         response = urllib2.urlopen(grdn_url)
-                    except IOError:
+                    except urllib2.HTTPError:
                         raw_input('Connection failed, press enter after you fix it.')
                 grdn_const = json.load(response)
                 mpid_grdn = grdn_const['constituency']['mp']['aristotle-id']
@@ -373,12 +373,12 @@ for session_year in session_years:
         stagesurl = billurl.replace('.html','') + '/stages.html'
         try:
             response = urllib2.urlopen(stagesurl)
-        except IOError:
+        except urllib2.HTTPError:
             print('URL opening failed, trying again after 5 secs...')
             time.sleep(5)
             try:
                 response = urllib2.urlopen(stagesurl)
-            except IOError:
+            except urllib2.HTTPError:
                 raw_input('Tried again, didnt work, waiting for input')
 
         # LOAD STAGES PAGE
@@ -465,7 +465,16 @@ for session_year in session_years:
                     newurl = raw_input('Multiple choices available - insert final URL to use.')
                     urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
 
-            xmlLGUK = urllib2.urlopen(urlLGUK).read()
+            try:
+                response = urllib2.urlopen(urlLGUK)
+            except urllib2.HTTPError:
+                time.sleep(5)
+                try:
+                    response = urllib2.urlopen(urlLGUK)
+                except urllib2.HTTPError:
+                    raw_input('Connection failed. Press enter once you\'ve fixed it')
+                    response = urllib2.urlopen(urlLGUK)
+            xmlLGUK = response.read()
             xmlsoup = BeautifulSoup(xmlLGUK,'xml')
             numParas = xmlsoup.Metadata.Statistics.TotalParagraphs['Value']
             numBodyParas = xmlsoup.Metadata.Statistics.BodyParagraphs['Value']
