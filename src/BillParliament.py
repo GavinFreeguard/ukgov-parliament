@@ -456,7 +456,8 @@ for session_year in session_years:
             except urllib2.HTTPError, e:
                 if e.code == 404:
                     actnameLGUK = raw_input('Getting data from legislation.gov.uk failed. Enter better search term.')
-                    acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + actnameLGUK + \
+                    newactnameLGUK = urllib2.quote(actnameLGUK)
+                    acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + newactnameLGUK + \
                              '&year=' + RoyalAssentDate[6:10]
                     print(acturl)
                     urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
