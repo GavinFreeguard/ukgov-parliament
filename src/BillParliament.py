@@ -21,6 +21,8 @@ import re
 from twfy import TWFY
 import json
 import unicodedata
+import httplib
+from lib_UKParl import WriteDict
 
 twfy = TWFY.TWFY('G8rDJLCXMjVNE2rc9cE9kx4J')
 
@@ -342,10 +344,10 @@ for session_year in session_years:
 
                 getconstit = json.load(twfycon, 'iso-8859-1')
                 constid_grdn = getconstit['guardian_id']
-                grdn_url = 'http://www.guardian.co.uk/politics/api/constituency/' + constid_grdn +'/json'
+                grdn_url = 'http://www.theguardian.com/politics/api/constituency/' + constid_grdn +'/json'
                 try:
                     response = urllib2.urlopen(grdn_url)
-                except urllib2.HTTPError:
+                except Exception:
                     print('URL opening failed, trying again after 5 secs...')
                     time.sleep(5)
                     try:
