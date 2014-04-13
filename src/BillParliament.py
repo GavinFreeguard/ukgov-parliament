@@ -448,38 +448,54 @@ for session_year in session_years:
 
         # For bills that received Royal Assent, find length from Legislation.Gov.Uk
         if (RoyalAssent=='Yes'):
-            if billcat == 'PB':
+            if billcat == 'PB': # for private bills, set the type to UK Local Act
                 typeLGUK = 'ukla'
             else:
-                typeLGUK = 'ukpga'
+                typeLGUK = 'ukpga' # for others set it to UK Public General Act
             print('This bill received Royal Assent')
             if (billfiletitle != 'NA') & (billfiletitle is not None):
-                actname = re.sub(r'[\s]{1}[c]{1}[\.]{1}[\w]*$','',billfiletitle)
+                actname = re.sub(r'[\s]{1}[c]{1}[\.]{1}[\s]?[\w]*$','',billfiletitle)
+                actnumMatchObject = re.search(r'[c]{1}[\.]{1}[\s]?[\d]*$',billfiletitle)
+                if actnumMatchObject is not None: # if extraction worked, clean up match to get just the number
+                    actnum = actnumMatchObject.group().replace('c.','').strip()
+                else:
+                    actnum = 'NA'
             else: # if there's no act name, use edited bill name
                 actname = billname.replace(' [HL]','')
+                actnum = 'NA'
             actnameLGUK = urllib.quote(actname)
-            acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + actnameLGUK + \
-                     '&year=' + RoyalAssentDate[6:10]
+            if actnum != 'NA': # if act number has been found, use it
+                acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&number=' + actnum + \
+                         '&year=' + RoyalAssentDate[6:10]
+            else: # otherwise use act name
+                acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + actnameLGUK + \
+                         '&year=' + RoyalAssentDate[6:10]
             print(acturl)
 
-            # CATCH EXCEPTIONS AND ALLOW INPUT TO RETRY WITH BETTER PARAMETERS
             # find the final URL returned by legislation.gov.uk in response to search query
+            # CATCH EXCEPTIONS AND ALLOW INPUT TO RETRY WITH BETTER PARAMETERS
             try:
                 urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
-            except urllib2.HTTPError, e:
-                if e.code == 404:
-                    actnameLGUK = raw_input('No act found with this search from legislation.gov.uk. Enter better search term.')
+            except urllib2.HTTPError, e: # for HTTP Errors
+                if e.code == 404: # for 404 errors, prompt for new search term
+                    actnameLGUK = raw_input('No act found with this search from legislation.gov.uk. Enter new search term.')
                     newactnameLGUK = urllib2.quote(actnameLGUK)
-                    acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + newactnameLGUK + \
-                             '&year=' + RoyalAssentDate[6:10]
-                    print(acturl)
-                    urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
-                if e.code == 300:
+                    try: # try searching with new term
+                        acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + newactnameLGUK + \
+                                 '&year=' + RoyalAssentDate[6:10]
+                    except HTTPError, e: # if search with new term returns 'Multiple Options', prompt for URL
+                        if e.code==300:
+                            newurl = raw_input('Multiple choices available - insert final URL to use.')
+                            urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
+                        if e.code==404: # if search with new term returns 404, prompt for URL
+                            newurl = raw_input('Search with new term returned nothing. Enter final URL')
+                            urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
+                if e.code == 300: # if original search returns 'Multiple options', prompt for URL
                     print(acturl)
                     newurl = raw_input('Multiple choices available - insert final URL to use.')
                     urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
 
-            # use this final URl to get XML data for that piece of legislation
+            # use this final URL to get XML data for that piece of legislation
             print(urlLGUK)
             try:
                 response = urllib2.urlopen(urlLGUK)
