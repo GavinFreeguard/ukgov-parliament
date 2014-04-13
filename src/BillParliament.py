@@ -35,6 +35,8 @@ if len(sys.argv) > 1:
     session_years = [sys.argv[1]]
 else:
     session_years = ["2013-14","2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
+# session_years = ['2007-08'] # for debug purposes
+
 # note: TWFY won't return the right MP through getMP if that MP is not in office at present, but will return all MPs through getMPs and/or getPerson at a certain time
 # in the past, from which you can then pick up the desired MP. Then you need to take care to get the right constituency from getMP given the point in time, and take the guardian 
 # constituency ID from there if possible
@@ -454,14 +456,15 @@ for session_year in session_years:
                 typeLGUK = 'ukpga' # for others set it to UK Public General Act
             print('This bill received Royal Assent')
             if (billfiletitle != 'NA') & (billfiletitle is not None):
-                actname = re.sub(r'[\s]{1}[c]{1}[\.]{1}[\s]?[\w]*$','',billfiletitle)
-                actnumMatchObject = re.search(r'[c]{1}[\.]{1}[\s]?[\d]*$',billfiletitle)
+                actname = re.sub(r'[\s]{1}[c]{1}[h]?[\.]{1}[\s]?[\w\s-]+$','',billfiletitle.strip())
+                actname = re.sub(r'[\s]{1}[-]{1}[\s]{1}[\shtmlversion]?[\w\s-]+$','',actname.strip())
+                actnumMatchObject = re.search(r'[c]{1}[\.]{1}[\s]?[\d]{1,2}',billfiletitle.strip())
                 if actnumMatchObject is not None: # if extraction worked, clean up match to get just the number
                     actnum = actnumMatchObject.group().replace('c.','').strip()
                 else:
                     actnum = 'NA'
             else: # if there's no act name, use edited bill name
-                actname = billname.replace(' [HL]','')
+                actname = billname.replace(' [HL]','').strip()
                 actnum = 'NA'
             actnameLGUK = urllib.quote(actname)
             if actnum != 'NA': # if act number has been found, use it
