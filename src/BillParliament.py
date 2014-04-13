@@ -10,6 +10,7 @@ reload(sys)
 sys.setdefaultencoding("utf-8")
 
 import csv
+import re
 from bs4 import BeautifulSoup
 import urllib
 import urllib2
@@ -31,11 +32,10 @@ twfy = TWFY.TWFY('G8rDJLCXMjVNE2rc9cE9kx4J')
 current_session = "2013-14"
 # use first command-line argument as search term, if available
 if len(sys.argv) > 1:
-    session_years = sys.argv[1]
+    session_years = [sys.argv[1]]
 else:
     session_years = ["2013-14","2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
-
-# note: TWFY won't return the right MP through getMP if that MP is not in office at present, but will return all MPs through getMPs and/or getPerson at a certain time 
+# note: TWFY won't return the right MP through getMP if that MP is not in office at present, but will return all MPs through getMPs and/or getPerson at a certain time
 # in the past, from which you can then pick up the desired MP. Then you need to take care to get the right constituency from getMP given the point in time, and take the guardian 
 # constituency ID from there if possible
 
@@ -67,7 +67,7 @@ headerrow1 = ['Session', 'BillURL', 'DateAccessed', 'BillName', 'BillType', 'Bil
               'NextStg-Billpage', 'NextStgDate-Billpage', 'BillTxtLnk1', 'BillTxtLnk2', 'BillTxtDate', 'BillTxtTitle',
               'LatestNews', 'Summary', 'mpnameuseful', 'mpid_twfy', 'mpid_grdn', 'mpparty', 'mpmajority', 'mpentered',
               'mpyearentered', 'mpconstituency', 'constid_grdn', 'mpmatch','NumParagraphsTotal','NumParagraphsBody',
-              'NumParagraphsSchedules','LegGovUkLink']
+              'NumParagraphsSchedules','LegGovUkLink','DocYear','DocMainType','DocEnactmentDate','DocCat','ActNameLGUK']
 writer1.writerow(headerrow1)
 
 stagefile = open(csvout2, 'wb')
@@ -119,6 +119,7 @@ for session_year in session_years:
         print(billname + ', session ' + session_year)
         urlstub = billitem[0].find('a')['href']
         billurl = urlbase + urllib.quote(urlstub)
+        print(billurl)
 
         # RETRIEVE BILL PAGE
 
@@ -139,7 +140,10 @@ for session_year in session_years:
         # FIND BASIC PARTS
 
         billagents = billsoup.find("dl", "bill-agents")
-        billagent = billagents.find_all(["dd", "dt"])
+        try:
+            billagent = billagents.find_all(["dd", "dt"])
+        except AttributeError:
+            continue
         typeofbill = billagent[1].string
 
         # DETERMINE TYPE OF BILL
@@ -158,7 +162,6 @@ for session_year in session_years:
             billcat = "PB"
             UKPB_bill = 'No'
         print(typeofbill + ', ' + billcat)
-        print(billurl)
 
         sponsor1 = 'NA'
         sponsor2 = 'NA'
@@ -450,7 +453,11 @@ for session_year in session_years:
             else:
                 typeLGUK = 'ukpga'
             print('This bill received Royal Assent')
-            actnameLGUK = urllib.quote(billname)
+            if (billfiletitle != 'NA') & (billfiletitle is not None):
+                actname = re.sub(r'[\s]{1}[c]{1}[\.]{1}[\w]*$','',billfiletitle)
+            else: # if there's no act name, use edited bill name
+                actname = billname.replace(' [HL]','')
+            actnameLGUK = urllib.quote(actname)
             acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + actnameLGUK + \
                      '&year=' + RoyalAssentDate[6:10]
             print(acturl)
@@ -461,7 +468,7 @@ for session_year in session_years:
                 urlLGUK = urllib2.urlopen(acturl).geturl() + '/data.xml'
             except urllib2.HTTPError, e:
                 if e.code == 404:
-                    actnameLGUK = raw_input('Getting data from legislation.gov.uk failed. Enter better search term.')
+                    actnameLGUK = raw_input('No act found with this search from legislation.gov.uk. Enter better search term.')
                     newactnameLGUK = urllib2.quote(actnameLGUK)
                     acturl = 'http://www.legislation.gov.uk/id?type=' + typeLGUK + '&title=' + newactnameLGUK + \
                              '&year=' + RoyalAssentDate[6:10]
@@ -473,6 +480,7 @@ for session_year in session_years:
                     urlLGUK = urllib2.urlopen(newurl).geturl() + '/data.xml'
 
             # use this final URl to get XML data for that piece of legislation
+            print(urlLGUK)
             try:
                 response = urllib2.urlopen(urlLGUK)
             except urllib2.HTTPError:
@@ -489,11 +497,23 @@ for session_year in session_years:
             numParas = xmlsoup.Metadata.Statistics.TotalParagraphs['Value']
             numBodyParas = xmlsoup.Metadata.Statistics.BodyParagraphs['Value']
             numScheduleParas = xmlsoup.Metadata.Statistics.ScheduleParagraphs['Value']
+            DocCat = xmlsoup.Metadata.PrimaryMetadata.DocumentClassification.DocumentCategory['Value']
+            DocMainType = xmlsoup.Metadata.PrimaryMetadata.DocumentClassification.DocumentMainType['Value']
+            DocYear = xmlsoup.Metadata.PrimaryMetadata.Year['Value']
+            DocEnactmentDate = xmlsoup.Metadata.PrimaryMetadata.EnactmentDate['Date']
+            LGUKurl = urlLGUK
+            ActName = xmlsoup.Metadata.title.text
         else:
             acturl = 'NA'
             numParas = 'NA'
             numBodyParas = 'NA'
             numScheduleParas = 'NA'
+            DocCat = 'NA'
+            DocEnactmentDate = 'NA'
+            DocMainType = 'NA'
+            DocYear = 'NA'
+            LGUKurl = 'NA'
+            ActName = 'NA'
 
         # WRITE BILL DATA
         row1 = [session_year, billurl, datetimestring, billname, typeofbill, billcat, UKPB_bill, UKPB_Act,
@@ -501,7 +521,8 @@ for session_year in session_years:
                 firststagename, laststagename, sponsor1, sponsor2, sponsor1inst, sponsor2inst, parlagent, promotedby,
                 lateststagename, lateststagedate, nextstagename, nextstagedate, billink1, billink2, billinkdate,
                 billfiletitle, latestnews, summary, mpnameuseful, mpid_twfy, mpid_grdn, mpparty, mpmaj, mpentered,
-                mpyearentered, mpconstituency, constid_grdn, mpproblem, numParas,numBodyParas,numScheduleParas,acturl]
+                mpyearentered, mpconstituency, constid_grdn, mpproblem, numParas,numBodyParas,numScheduleParas,LGUKurl,
+                DocYear,DocMainType,DocEnactmentDate,DocCat,ActName]
         writer1.writerow(row1)
 
 
