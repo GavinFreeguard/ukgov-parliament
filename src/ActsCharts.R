@@ -22,4 +22,12 @@ sbills2 <- summarise(sbills,size=sum(size,na.rm=T))
 
 qplot(Session,size,stat='sum',data=sbills2,geom='bar')
 qplot(Sponsor1Inst,size,data=sbills,geom='bar',position='stack',fill=Session) + coord_flip()
-qplot(Session,size,data=sbills,geom='bar',position='stack',fill=Sponsor1Inst) + coord_flip()
+xx <- qplot(Session,size,data=sbills,geom='bar',position='stack',fill=Sponsor1Inst) + coord_flip()
+
+sessionslist <- unique(as.character(sbills$Session))
+
+# Manipulate demonstration
+manipulate(qplot(Sponsor1Inst, size, data=sbills[sbills$Session==x.Sess,],geom='bar')+coord_flip(),
+           x.Sess=do.call(picker, as.list(sessionslist)))
+# the do.call calls the picker function and passes sessionslist as a list of 
+# parameters

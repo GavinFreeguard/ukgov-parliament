@@ -17,13 +17,12 @@ import urllib2
 import time
 import datetime
 from datetime import datetime
-now = datetime.now()
 import re
 from twfy import TWFY
 import json
 import unicodedata
 import httplib
-from lib_UKParl import WriteDict
+from lib_general import WriteDict, FilenameWithTimestamp
 
 twfy = TWFY.TWFY('G8rDJLCXMjVNE2rc9cE9kx4J')
 
@@ -35,10 +34,11 @@ if len(sys.argv) > 1:
     session_years = [sys.argv[1]]
 else:
     session_years = ["2013-14","2012-13","2010-12", "2009-10", "2008-09", "2007-08"] #2007-08 is the earliest for which the scraper works. Year after dash needs to have two digits.
+
 # session_years = ['2007-08'] # for debug purposes
 
 # note: TWFY won't return the right MP through getMP if that MP is not in office at present, but will return all MPs through getMPs and/or getPerson at a certain time
-# in the past, from which you can then pick up the desired MP. Then you need to take care to get the right constituency from getMP given the point in time, and take the guardian 
+# in the past, from which you can then pick up the desired MP. Then you need to take care to get the right constituency from getMP given the point in time, and take the guardian
 # constituency ID from there if possible
 
 # perhaps you need to specify a last election date with each session and pick the right entry for a given person based on this?
@@ -49,6 +49,7 @@ else:
 
 # PREPARE FILES AND HEADERS
 
+now = datetime.now()
 datetimestring = now.strftime("%Y%m%d_%H%M%S")
 
 billsoutfile = "../output/billsUK_" + datetimestring + '.csv'

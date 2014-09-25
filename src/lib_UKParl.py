@@ -1,40 +1,6 @@
 __author__ = 'petrbouchal'
 
-__author__ = 'bouchalp'
-
 outputfolder = '../output/'
-
-def SavePretty(JSONobject,filename):
-    "Saves content of JSON as pretty-printed text"
-    from pprint import pprint
-    filepath = outputfolder + filename + '.json'
-    dataconn=open(filepath,'w+')
-    pprint(JSONobject,dataconn)
-    dataconn.close()
-
-def SaveFile(url,filename, fileext):
-    import urllib2
-    from time import sleep
-    from urllib2 import HTTPError
-    filepath = outputfolder + filename + '.' + fileext
-    try:
-        data = urllib2.urlopen(url)
-    except HTTPError,e:
-        print ('HTTP Error')
-        print(e)
-        print('Trying again in 10 seconds...')
-        sleep(10)
-        try:
-            data = urllib2.urlopen(url)
-        except HTTPError, e:
-            print('Failed - HTTP Error')
-            print(e)
-            raise
-    dataread = data.read()
-    dataconn = open(filepath,'w+')
-    dataconn.write(dataread)
-    dataconn.flush()
-    dataconn.close()
 
 def DGUKopenAndParse(apiaction,apidata):
     'Returns parsed result from API call'
@@ -87,17 +53,30 @@ def GovUkOpenAndParse(baseurl,querydata):
     result = BeautifulSoup(data,'lxml')
     return result
 
-def WriteDict(filepath,listofdicts):
+def LGUKFindHighest(legtype,topcount,year):
     """
-    Writes dictionary to file in filepath
-    @type filepath: str
-    @param filepath:
-    @param listofdicts: list of dictionaries
+    Searches for highest-numbered document on Legislation.gov.uk
+    @legtype: str
+    @topcount: int
+    @year: int
     """
-    import csv
-    with open(filepath, 'w+') as orgfile:
-        orgwriter = csv.DictWriter(orgfile, fieldnames=listofdicts[0].keys())
-        orgwriter.writeheader()
-        orgwriter.writerows(listofdicts)
-    result = True
-    return result
+    import httplib
+
+    solved = 0
+    count = topcount
+    while(solved==0):
+        url = 'http://www.legislation.gov.uk/' + legtype + '/' + str(year) + '/' + str(count) + \
+              '/contents/enacted/data.xml'
+        c = httplib.HTTPConnection(url)
+        c.request("HEAD", '')
+        oldcount = count
+        if c.getresponse().status > 399:
+            pagefound = 0
+            solved = 0
+            count = oldcount/2
+        else:
+            pagefound = 1
+            count = oldcount
+            print('Fi')
+        previouspagefound = pagefound
+
